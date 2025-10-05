@@ -11,3 +11,7 @@ cat:
 
 xgb:
 	python3 -m src.models.train_xgboost
+
+app:
+	@echo "Starting Streamlit inference app..."
+	streamlit run app.py --server.port 8501 --server.headless true

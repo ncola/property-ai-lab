@@ -8,3 +8,4 @@ lightgbm
 catboost
 pyyaml
 python-dotenv
+streamlit
