@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Integer, BigInteger, Text, Date, Boolean, Numeric, String
-from db_setup import Base
+from src.data.database.db_setup import Base
 
 class ApartmentSaleListing(Base):
     __tablename__ = "apartments_sale_listings"

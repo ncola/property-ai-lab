@@ -1,0 +1,35 @@
+experiment:
+  name: "apartemnts_katowice_prices"
+  run_name: "tree"
+
+data:
+  target_col: "price_per_m"          
+
+feature_selection:
+  include: ["market", "building_age", "area", "rooms_num", "building_floors_num", "floor_num", "building_material", "construction_status", "district", 'balcony', 'separate_kitchen', 'air_conditioning','roller_shutters', 'dishwasher', 'garage','anti_burglary_door', 'basement', 'entryphone','garden', 'internet', 'monitoring', 'terrace', 'alarm', 'lift', 'closed_area']
+
+lightgbm:
+  learning_rate: 0.05
+  num_leaves: 63
+  min_data_in_leaf: 50
+  feature_fraction: 0.9
+  bagging_fraction: 0.8
+  bagging_freq: 1
+  lambda_l1: 0.0
+  lambda_l2: 0.1
+
+catboost:
+  depth: 8
+  learning_rate: 0.05
+  l2_leaf_reg: 3.0
+  iterations: 800
+  od_type: Iter
+  od_wait: 100
+
+xgboost:
+  max_depth: 8
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.9
+  n_estimators: 800
+  reg_lambda: 1.0

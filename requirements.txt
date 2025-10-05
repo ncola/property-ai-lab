@@ -1,0 +1,10 @@
+mlflow
+scikit-learn
+psycopg2
+pandas
+numpy
+scikit-learn
+lightgbm
+catboost
+pyyaml
+python-dotenv

@@ -1,13 +1,8 @@
 import pandas as pd
-import numpy as np
-
-from database.repositories import Database
-from database.models import ApartmentSaleListing, Location, Features
-from database.repositories import LocationsRepository, ListingsRepository, FeaturesRepository
-
+from src.data.database.repositories import LocationsRepository, ListingsRepository, FeaturesRepository
 
 class TrainingDataService:
-    def __init__(self, db: Database):
+    def __init__(self, db):
         self.db = db
         self.listings = ListingsRepository(db)
         self.locations = LocationsRepository(db)

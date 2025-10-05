@@ -1,9 +1,8 @@
-from db_setup import Database
-from models import ApartmentSaleListing, Location, Features
+from src.data.database.models import ApartmentSaleListing, Location, Features
 from sqlalchemy import select
 
 class ListingsRepository:
-    def __init__(self, db: Database):
+    def __init__(self, db):
         self.db = db
 
     def get(self, listing_id: int):
@@ -19,7 +18,7 @@ class ListingsRepository:
 
 
 class FeaturesRepository:
-    def __init__(self, db: Database):
+    def __init__(self, db):
         self.db = db
 
     def get_by_listing(self, listing_id: int):
@@ -28,7 +27,7 @@ class FeaturesRepository:
 
 
 class LocationsRepository:
-    def __init__(self, db: Database):
+    def __init__(self, db):
         self.db = db
 
     def get(self, location_id: int):
