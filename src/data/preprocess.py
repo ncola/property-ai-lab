@@ -121,3 +121,22 @@ def create_building_age(df):
 
     df["building_age"] = df["building_build_year"].apply(_compute_age).astype("Int64")
     return df
+
+
+def to_categorical(df):
+    df_cat = df.copy()
+    obj_cols = df_cat.select_dtypes(include=["object", "string"]).columns
+
+    cat_cols = []
+    for col in obj_cols:
+        df_cat[col] = df_cat[col].astype("category")
+        cat_cols.append(col)
+
+    return df_cat, cat_cols
+
+def to_float64(df):
+    df_float = df.copy()
+    num_cols = df_float.select_dtypes(include=["number"]).columns.tolist()
+    df_float[num_cols] = df_float[num_cols].astype("float64")
+    
+    return df_float, num_cols

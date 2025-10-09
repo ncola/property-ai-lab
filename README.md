@@ -5,7 +5,7 @@ End-to-end workflow for training real-estate price models (LightGBM / CatBoost /
 ## Features
 📓 MLflow experiments, params, metrics, artifacts, and model logging
 
-🧪 Models: LightGBM, CatBoost, XGBoost
+🧪 Models: XGBoost
 
 🧰 Makefile shortcuts: start MLflow server, train models, run app
 
@@ -32,7 +32,7 @@ which scrapes Otodom and stores data in PostgreSQL.
 
 ## Makefile
 - `make run-server` – start MLflow server (http://127.0.0.1:5002)
-- `make xgb` / `make lgb` / `make cat` – train models
+- `make xgb` / `make xgb-tune` – train models
 - `make app` – run Streamlit UI (http://localhost:8501)
 
 

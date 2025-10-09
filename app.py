@@ -19,7 +19,7 @@ mlflow.set_tracking_uri("http://127.0.0.1:5002")
 st.set_page_config(page_title="Property AI Lab 🏠", layout="centered")
 
 st.title("🏠 Property Price Predictor")
-st.markdown("Podaj cechy nieruchomości na sprzedaz w Katowicach, a model XGBoost oszacuje jej wartość.")
+st.markdown("Podaj cechy nieruchomości na sprzedaz w Katowicach, a model oszacuje jej wartość.")
 
 MODEL_URI = "runs:/785968a6a7ac46b1916321c9ae853c8d/model"
 booster = mlflow.xgboost.load_model(MODEL_URI)
