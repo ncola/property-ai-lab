@@ -9,12 +9,21 @@ class ListingsRepository:
         with self.db.session() as session:
             return session.get(ApartmentSaleListing, listing_id)
         
-    def list_all_ids(self) -> list[int]:
+    def list_all_ids(self):
         with self.db.session() as session:
             rows = session.execute(
                 select(ApartmentSaleListing.id).order_by(ApartmentSaleListing.id.asc())
             ).all()
             return [r[0] for r in rows]
+        
+    def list_ids_by_period(self, date):
+        with self.db.session() as session:
+            rows = session.execute(
+                select(ApartmentSaleListing.id)
+                .where(ApartmentSaleListing.creation_date >= date)
+                .order_by(ApartmentSaleListing.creation_date.asc())
+            )
+            return [r[0] for r in rows]          
 
 
 class FeaturesRepository:

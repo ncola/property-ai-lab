@@ -13,5 +13,5 @@ xgb-tune:
 	python3 -m src.pipelines.train_xgboost --tune
 
 app:
-	@echo "Starting Streamlit inference app on http://localhost:8501"
-	streamlit run app.py --server.port 8501 --server.headless true
+	@echo "Starting Streamlit inference app on http://localhost:8503"
+	streamlit run app2.py --server.port 8503 --server.headless true

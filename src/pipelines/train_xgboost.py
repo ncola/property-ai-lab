@@ -9,7 +9,7 @@ import argparse
 
 import src.utils.mlflow_utils as ml_utils
 import src.utils.metrics as metrics
-from src.data.database.service import TrainingDataService
+from src.data.database.service import DataService
 from src.data.prepare_features import prepare_features
 from src.data.database.db_setup import Database
 from datetime import datetime
@@ -100,7 +100,7 @@ def main():
 
     # getting and prepare data
     db = Database()
-    df_raw = TrainingDataService(db).load_dataframe_all()
+    df_raw = DataService(db).load_dataframe_all()
     if df_raw.empty:
         raise SystemExit("There is no data.")
 

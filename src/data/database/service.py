@@ -1,7 +1,8 @@
 import pandas as pd
 from src.data.database.repositories import LocationsRepository, ListingsRepository, FeaturesRepository
+from datetime import datetime, timedelta
 
-class TrainingDataService:
+class DataService:
     def __init__(self, db):
         self.db = db
         self.listings = ListingsRepository(db)
@@ -46,3 +47,51 @@ class TrainingDataService:
         df = df[df["city"] == "katowice"]
 
         return df
+
+    def load_data_by_period(self, period="last_week"):
+        today = datetime.now()  
+
+        if period == "last_3d":
+            date = today - timedelta(days=3)
+        elif period == "last_week":
+            date = today - timedelta(days=7)
+        elif period == "last_month":
+            date = today - timedelta(days=30)
+        else:
+            raise ValueError(f"Not valid period: {period}")
+
+        listing_ids = self.listings.list_ids_by_period(date)
+
+        if not listing_ids:
+            return pd.DataFrame()
+
+        rows = []
+        for listing_id in listing_ids:
+            listing = self.listings.get(int(listing_id))
+            if listing is None:
+                continue
+
+            location_obj = None
+            if getattr(listing, "location_id", None) is not None:
+                try:
+                    location_obj = self.locations.get(int(listing.location_id))
+                except Exception:
+                    location_obj = self.locations.get(listing.location_id)
+
+            features_obj = self.features.get_by_listing(int(listing_id))
+
+            row = {
+                **self.object_to_dict(listing),
+                **self.object_to_dict(location_obj),
+                **self.object_to_dict(features_obj),
+                }
+            rows.append(row)
+
+        df = pd.DataFrame(rows)
+
+        df = df[df["city"] == "katowice"]
+
+        return df
+    
+
+
