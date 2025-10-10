@@ -24,3 +24,6 @@ training:
   cv_splits: 5
   random_state: 1
 
+inference:
+  model_uri: "models:/apartments_price_model/Production"
+

@@ -55,7 +55,6 @@ def clean_building_build_year(df):
     year_col = "building_build_year"
     status_col = "construction_status"
 
-
     out[year_col] = pd.to_numeric(out[year_col], errors="coerce")
     out[status_col] = out[status_col].astype("string").str.strip().str.lower()
 
@@ -110,15 +109,16 @@ def clean_building_build_year(df):
     return out
 
 
-def create_building_age(df):
+def _compute_age(year):
     today = date.today()
+    if pd.isna(year):          
+        return pd.NA
+    if year == -1:           
+        return -1
+    return today.year - int(year)
+
+def create_building_age(df):
     df["building_build_year"] = pd.to_numeric(df["building_build_year"], errors="coerce")
-
-    def _compute_age(year):
-        if year == -1:
-            return -1
-        return today.year - int(year)
-
     df["building_age"] = df["building_build_year"].apply(_compute_age).astype("Int64")
     return df
 
@@ -138,5 +138,5 @@ def to_float64(df):
     df_float = df.copy()
     num_cols = df_float.select_dtypes(include=["number"]).columns.tolist()
     df_float[num_cols] = df_float[num_cols].astype("float64")
-    
+
     return df_float, num_cols

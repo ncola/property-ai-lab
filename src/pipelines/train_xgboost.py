@@ -10,7 +10,7 @@ import argparse
 import src.utils.mlflow_utils as ml_utils
 import src.utils.metrics as metrics
 from src.data.database.service import DataService
-from src.data.prepare_features import prepare_features
+from src.data.prepare_features import features_train_pipeline
 from src.data.database.db_setup import Database
 from datetime import datetime
 
@@ -104,7 +104,7 @@ def main():
     if df_raw.empty:
         raise SystemExit("There is no data.")
 
-    X, y, cat_cols = prepare_features(df_raw, target_col, include)
+    X, y, cat_cols = features_train_pipeline(df_raw, target_col, include)
 
     # split the data
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=test_size, random_state=random_state)
