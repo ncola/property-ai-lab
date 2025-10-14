@@ -2,10 +2,10 @@ import pandas as pd
 import src.data.preprocess as pre
 
 
-def prepare_features(df_raw, target_col, include):
+def features_train_pipeline(df_raw, target_col, include):
     df = pre.basic_transformations_depending_on_database(df_raw.copy())
     df = pre.price_per_m2_outliers(df)
-    df = pre.clean_building_build_year(df)
+    #df = pre.clean_building_build_year(df)
     df = pre.create_building_age(df)
 
     df = df.dropna(subset=[target_col]).copy()
@@ -22,7 +22,7 @@ def prepare_features(df_raw, target_col, include):
         X = X.drop(columns=empty_cols)
 
     X, cat_cols = pre.to_categorical(X)
-    X, num_cols = pre.to_float64(X)
+    X, _ = pre.to_float64(X)
 
     return X, y, cat_cols
 

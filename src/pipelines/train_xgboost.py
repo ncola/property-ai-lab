@@ -50,10 +50,10 @@ def tune_hyperparams(X, y, base_params, n_iter = 30, cv_splits = 5, random_state
     )
 
     search_space = {
-        "max_depth": randint(3, 13),                 
-        "learning_rate": np.linspace(0.01, 0.20, 10),
-        "subsample": np.linspace(0.5, 1.0, 6),       
-        "colsample_bytree": np.linspace(0.5, 1.0, 6),
+        "max_depth": randint(5, 13),                 
+        "learning_rate": np.linspace(0.01, 0.20, 15),
+        "subsample": np.linspace(0.8, 1.0, 4),       
+        "colsample_bytree": np.linspace(0.8, 1.0, 4),
         "min_child_weight": randint(1, 10),          
         "reg_alpha": np.linspace(0.0, 0.5, 6),       
         "reg_lambda": np.linspace(0.5, 2.0, 7),      
@@ -149,7 +149,7 @@ def main():
 
 
     # proper trening run 
-    with mlflow.start_run(run_name="xgboost"):
+    with mlflow.start_run(run_name="xgboost - price"):
         # log 
         mlflow.log_params({f"cfg_{k}": v for k, v in cfg.get("experiment", {}).items() if k != "name"})
         mlflow.log_params(hp)

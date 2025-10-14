@@ -1,7 +1,10 @@
-.PHONY: run-server app2 
+MLFLOW_URI := http://localhost:5002
+
+
+.PHONY: run-server app-automatic
 
 run-server:
-	@echo "🚀 Starting MLflow tracking server on http://localhost:5002"
+	@echo "🚀 Starting MLflow tracking server on $(MLFLOW_URI)"
 	mlflow server --host 0.0.0.0 --port 5002 --backend-store-uri sqlite:///mlflow.db  --default-artifact-root file:./mlartifacts
 
 xgb:

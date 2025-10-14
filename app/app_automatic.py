@@ -31,7 +31,7 @@ st.markdown("""
 try:
     set_tracking()
 except Exception as e:
-    st.error("Couldn't set mlflow tracking uri, check config: {e}")
+    st.error(f"Couldn't set mlflow tracking uri, check config: {e}")
     st.stop()
 
 # choosing period
@@ -66,8 +66,7 @@ df_all = df_all.head(int(n_cards))
 
 
 # add model inference
-X = features_inference_pipeline(df_all)
-predicted = predict(X)
+predicted = predict(df_all)
 
 df_all["predicted_price_per_m2"] = predicted
 df_all["predicted_price"] = calculate_price(df_all)

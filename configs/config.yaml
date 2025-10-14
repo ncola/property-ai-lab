@@ -2,7 +2,7 @@ experiment:
   name: "apartemnts_katowice_prices"
 
 data:
-  target_col: "price_per_m"          
+  target_col: "price"          
 
 feature_selection:
   include: ["market", "building_age", "area", "rooms_num", "building_floors_num", "floor_num", "building_material", "construction_status", "district", 'balcony', 'separate_kitchen', 'air_conditioning','roller_shutters', 'dishwasher', 'garage','anti_burglary_door', 'basement', 'entryphone','garden', 'internet', 'monitoring', 'terrace', 'alarm', 'lift', 'closed_area']
@@ -17,13 +17,12 @@ xgboost:
 
 training:
   test_size: 0.2
-  random_state: 1
+  random_state: 2
   early_stopping_rounds: 50
   eval_metric: rmsle
   tune_n_iter: 40
   cv_splits: 5
-  random_state: 1
 
 inference:
-  model_uri: "models:/apartments_price_model/Production"
+  model_uri: "models:/apartments_price_model/3"
 

@@ -17,10 +17,14 @@ This is a **screenshot from the Streamlit inference app** used in this project.
 The app loads the model from MLflow and returns both **price per m²** and **total price** based on the entered property features.
 
 <p align="center">
-  <img src="image.png" alt="app screenshot" width="700">
+  <img src="app_manual_preview.png" alt="app-manual preview" width="700">
 </p>
 <br/>
 
+<p align="center">
+  <img src="app_automatic_preview.png" alt="app-automatic preview" width="700">
+</p>
+<br/>
 
 ## Data source
 
@@ -33,7 +37,8 @@ which scrapes Otodom and stores data in PostgreSQL.
 ## Makefile
 - `make run-server` – start MLflow server (http://127.0.0.1:5002)
 - `make xgb` / `make xgb-tune` – train models
-- `make app` – run Streamlit UI (http://localhost:8501)
+- `make app-manual` – run Streamlit UI (manual version) (http://localhost:8503)
+- `make app-automatic` – run Streamlit UI (automatic version) (http://localhost:8504)
 
 
 ------------------------------------------------------------------------------------
