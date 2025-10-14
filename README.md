@@ -1,6 +1,9 @@
 # property-ai-lab
 
-End-to-end workflow for training real-estate price models (LightGBM / CatBoost / XGBoost) with MLflow tracking + a Streamlit app for inference (price per m² and total price).
+Property AI Lab is an end-to-end, production-style machine learning project for real-estate analytics. 
+It covers the ml  lifecycle — from PostgreSQL data ingestion and feature engineering to XGBoost model training, MLflow experiment tracking, and Streamlit deployment for interactive predictions.
+The system predicts property prices and evaluates whether a listing is an underpriced opportunity (“bargain detection”) using real market data. All training runs are automatically tracked in MLflow, including hyperparameters, evaluation metrics, model artifacts, and feature metadata, making it easy to compare experiments and reproduce results.
+The project structure follows modern MLOps best practices, with modular code, YAML configuration files, and a clean separation between data, model, and application layers.
 
 ## Features
 📓 MLflow experiments, params, metrics, artifacts, and model logging
