@@ -50,7 +50,7 @@ class ApartmentSaleListing(Base):
     agency_name: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     offer_link: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     active: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
-    closing_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    detected_inactive_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     development_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     development_title: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
