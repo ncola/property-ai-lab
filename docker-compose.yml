@@ -1,0 +1,47 @@
+services:
+
+  mlflow:
+    build: .
+    container_name: property-mlflow
+    command: >
+      mlflow server
+        --host 0.0.0.0
+        --port 5002
+        --backend-store-uri sqlite:///mlflow.db
+        --default-artifact-root file:///app/mlartifacts
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./mlflow.db:/app/mlflow.db
+      - ./mlartifacts:/app/mlartifacts
+    environment:
+      - MLFLOW_SERVER_ALLOWED_HOSTS=*
+
+  app-manual:
+    build: .
+    container_name: property-app-manual
+    command: streamlit run app/app_manual.py --server.port 8503 --server.headless true
+    ports:
+      - "8503:8503"
+    env_file: .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5002
+    volumes:
+      - ./mlartifacts:/app/mlartifacts
+    depends_on:
+      - mlflow
+
+  app-automatic:
+    build: .
+    container_name: property-app-automatic
+    command: streamlit run app/app_automatic.py --server.port 8504 --server.headless true
+    ports:
+      - "8504:8504"
+    env_file: .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5002
+      - DB_HOST=host.docker.internal
+    volumes:
+      - ./mlartifacts:/app/mlartifacts
+    depends_on:
+      - mlflow

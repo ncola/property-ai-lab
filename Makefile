@@ -1,7 +1,7 @@
 MLFLOW_URI := http://localhost:5002
 
 
-.PHONY: run-server app-automatic
+.PHONY: run-server app-automatic docker-build docker-up docker-down docker-logs
 
 run-server:
 	@echo "🚀 Starting MLflow tracking server on $(MLFLOW_URI)"
@@ -22,3 +22,18 @@ app-manual:
 app-automatic:
 	@echo "Starting Streamlit inference app (automatic based on PostgreSQL) on http://localhost:8504"
 	PYTHONPATH=$(PWD) streamlit run app/app_automatic.py --server.port 8504 --server.headless true
+
+docker-build:
+	@echo "Building Docker images..."
+	docker compose build
+
+docker-up:
+	@echo "Starting all services (mlflow + apps)..."
+	docker compose up -d
+
+docker-down:
+	@echo "Stopping all services..."
+	docker compose down
+
+docker-logs:
+	docker compose logs -f

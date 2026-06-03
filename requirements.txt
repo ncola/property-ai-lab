@@ -1,6 +1,6 @@
 mlflow
 scikit-learn
-psycopg2
+psycopg2-binary
 pandas
 numpy
 scikit-learn
@@ -9,3 +9,4 @@ catboost
 pyyaml
 python-dotenv
 streamlit
+xgboost
