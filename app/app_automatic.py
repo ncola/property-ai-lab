@@ -68,8 +68,8 @@ df_all = df_all.head(int(n_cards))
 # add model inference
 predicted = predict(df_all)
 
-df_all["predicted_price_per_m2"] = predicted
-df_all["predicted_price"] = calculate_price(df_all)
+df_all["predicted_price"] = predicted
+df_all["predicted_price_per_m2"] = (predicted / df_all["area"]).astype(int)
 diff, deals = is_deal(df_all)
 df_all["diff"] = round(diff*100, 2)
 df_all["is_deal"] = deals
