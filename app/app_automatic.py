@@ -21,9 +21,24 @@ def load_offers_by_period(period):
 st.markdown("""
 <style>
 .block-container {
-  max-width: 99vw !important; 
+  max-width: 99vw !important;
   padding-left: 2rem;
   padding-right: 2rem;
+}
+button[kind="secondary"] {
+  background: none !important;
+  border: none !important;
+  color: #888 !important;
+  font-size: 0.8rem !important;
+  box-shadow: none !important;
+}
+button[kind="secondary"]:hover {
+  color: #333 !important;
+  text-decoration: underline;
+  background: none !important;
+}
+div[data-testid="stButton"] {
+  margin-top: -1rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -98,8 +113,24 @@ for i, row in df_all.head(int(n_cards)).iterrows():
         with left:
             title = row.get("title") or f"Oferta #{row.get('otodom_listing_id', i)}"
             st.markdown(f"##### {title}")
-            description = row.get("description_text")
-            st.markdown(f"Opis: {cut_description(description, 400)}")
+            description = row.get("description_text") or ""
+            desc_key = f"desc_expanded_{i}"
+            if desc_key not in st.session_state:
+                st.session_state[desc_key] = False
+            def fmt_desc(text):
+                return "<br>".join(text.splitlines())
+
+            if st.session_state[desc_key] or len(description) <= 400:
+                st.markdown(f"Opis:<br>{fmt_desc(description)}", unsafe_allow_html=True)
+                if len(description) > 400:
+                    _, btn_col, _ = st.columns([1, 1, 1])
+                    with btn_col:
+                        st.button("zwiń ▲", key=f"btn_{i}", use_container_width=True, on_click=lambda k=desc_key: st.session_state.update({k: False}))
+            else:
+                st.markdown(f"Opis:<br>{fmt_desc(cut_description(description, 400))}", unsafe_allow_html=True)
+                _, btn_col, _ = st.columns([1, 1, 1])
+                with btn_col:
+                    st.button("pokaż pełny opis ▼", key=f"btn_{i}", use_container_width=True, on_click=lambda k=desc_key: st.session_state.update({k: True}))
             link = row.get("offer_link")
             st.markdown(f"🔗 [Link do oferty]({link})")
 
