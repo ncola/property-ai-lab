@@ -90,6 +90,11 @@ class DataService:
         df = pd.DataFrame(rows)
 
         df = df[df["city"] == "katowice"]
+        
+        df = df.sort_values(
+            by=["creation_date", "creation_time"],
+            ascending=[False, False]
+)
 
         return df
     

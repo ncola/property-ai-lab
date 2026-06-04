@@ -21,7 +21,7 @@ st.set_page_config(page_title="Property AI Lab 🏠", layout="centered")
 st.title("🏠 Property Price Predictor")
 st.markdown("Podaj cechy nieruchomości na sprzedaz w Katowicach, a model oszacuje jej wartość.")
 
-MODEL_URI = "runs:/785968a6a7ac46b1916321c9ae853c8d/model"
+MODEL_URI = "m-05c0ee9075b1472fa8b0100fc0c79061"
 booster = mlflow.xgboost.load_model(MODEL_URI)
 
 FEATURES = [
