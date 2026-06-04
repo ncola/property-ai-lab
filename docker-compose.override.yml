@@ -1,0 +1,10 @@
+services:
+  app-manual:
+    volumes:
+      - ./app:/app/app
+      - ./src:/app/src
+
+  app-automatic:
+    volumes:
+      - ./app:/app/app
+      - ./src:/app/src
