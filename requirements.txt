@@ -10,3 +10,5 @@ pyyaml
 python-dotenv
 streamlit
 xgboost
+pytest
+pytest-cov
