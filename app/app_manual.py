@@ -1,43 +1,27 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import mlflow
-import xgboost as xgb
+from src.utils.mlflow_utils import set_tracking
+from src.serving.inference import predict_calculator
 
 st.markdown("""
 <style>
 .block-container {
-  max-width: 1000px; 
+  max-width: 1000px;
   padding-left: 2rem;
   padding-right: 2rem;
 }
 </style>
 """, unsafe_allow_html=True)
 
-mlflow.set_tracking_uri("http://127.0.0.1:5002")  
-
+try:
+    set_tracking()
+except Exception as e:
+    st.error(f"Couldn't set mlflow tracking uri, check config: {e}")
+    st.stop()
 st.set_page_config(page_title="Property AI Lab 🏠", layout="centered")
 
 st.title("🏠 Property Price Predictor")
 st.markdown("Podaj cechy nieruchomości na sprzedaz w Katowicach, a model oszacuje jej wartość.")
-
-MODEL_URI = "m-05c0ee9075b1472fa8b0100fc0c79061"
-booster = mlflow.xgboost.load_model(MODEL_URI)
-
-FEATURES = [
-    "market","building_age","area","rooms_num","building_floors_num","floor_num",
-    "building_material","construction_status","district","balcony","separate_kitchen",
-    "air_conditioning","roller_shutters","dishwasher","garage","anti_burglary_door",
-    "basement","entryphone","garden","internet","monitoring","terrace","alarm","lift","closed_area"
-]
-CAT_STR_COLS = ["market","building_material","construction_status","district","floor_num"]
-
-BIN_COLS = ["balcony","separate_kitchen","air_conditioning","roller_shutters","dishwasher",
-            "garage","anti_burglary_door","basement","entryphone","garden","internet",
-            "monitoring","terrace","alarm","lift","closed_area"]
-
-INT_COLS = ["building_age"]
-FLOAT_COLS = ["area","rooms_num","building_floors_num"]
 
 def fmt_pln(x: float) -> str:
     return f"{x:,.0f} PLN".replace(",", " ")
@@ -51,7 +35,7 @@ with b1:
 with b2:
     floor_options = ['1','2','0','3','4','10+','5','6','7','8','9','10']
     rooms_num = st.number_input("Liczba pokoi", min_value=1, max_value=20, value=3, step=1)
-    floor_num = st.selectbox("Piętro", floor_options, index=2) 
+    floor_num = st.selectbox("Piętro", floor_options, index=2)
 
 st.subheader("Budynek")
 bu1, bu2 = st.columns(2)
@@ -89,12 +73,11 @@ with u3:
     roller_shutters = st.selectbox("Rolety", ["nie", "tak"])
     anti_burglary_door = st.selectbox("Drzwi antywłamaniowe", ["nie", "tak"])
     closed_area = st.selectbox("Osiedle zamknięte", ["nie", "tak"])
-with u4: 
+with u4:
     entryphone = st.selectbox("Domofon / wideofon", ["nie", "tak"])
     monitoring = st.selectbox("Monitoring", ["nie", "tak"])
     alarm = st.selectbox("Alarm", ["nie", "tak"])
     basement = st.selectbox("Piwnica", ["nie", "tak"])
-    
 
 input_df = pd.DataFrame([{
     "market": market,
@@ -102,7 +85,7 @@ input_df = pd.DataFrame([{
     "area": area,
     "rooms_num": rooms_num,
     "building_floors_num": building_floors_num,
-    "floor_num": floor_num,  
+    "floor_num": floor_num,
     "building_material": building_material,
     "construction_status": construction_status,
     "district": district,
@@ -124,28 +107,11 @@ input_df = pd.DataFrame([{
     "closed_area": closed_area,
 }])
 
-
-input_df[BIN_COLS] = (input_df[BIN_COLS]
-                      .replace({"tak": 1, "nie": 0, True: 1, False: 0})
-                      .astype("int64"))
-
-for c in INT_COLS:
-    input_df[c] = pd.to_numeric(input_df[c], errors="coerce").fillna(0).astype("int64")
-for c in FLOAT_COLS:
-    input_df[c] = pd.to_numeric(input_df[c], errors="coerce").astype("float64")
-
-for c in CAT_STR_COLS:
-    input_df[c] = input_df[c].astype("category")
-
-input_df = input_df[FEATURES]
-
 st.markdown("---")
 if st.button("🔮 Przewiduj cenę"):
-    dtest = xgb.DMatrix(input_df, enable_categorical=True)
-    yhat = booster.predict(dtest)
-    price_per_m2 = float(np.ravel(yhat)[0])
-
-    total_price = price_per_m2 * float(area)
+    yhat = predict_calculator(input_df)
+    total_price = float(yhat[0])
+    price_per_m2 = total_price / float(area)
 
     colA, colB = st.columns(2)
     with colA:
@@ -155,6 +121,5 @@ if st.button("🔮 Przewiduj cenę"):
 
     with st.expander("Podgląd danych wejściowych"):
         st.dataframe(input_df)
-
 
 st.caption("Property AI Lab | Streamlit + MLflow | demo")
