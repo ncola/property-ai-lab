@@ -1,6 +1,6 @@
 import pandas as pd
-from src.data.database.repositories import LocationsRepository, ListingsRepository, FeaturesRepository
 from datetime import datetime, timedelta
+from src.data.database.repositories import LocationsRepository, ListingsRepository, FeaturesRepository
 
 class DataService:
     def __init__(self, db):
@@ -16,40 +16,41 @@ class DataService:
         return {k: v for k, v in vars(obj).items() if not k.startswith("_sa_")}
 
     def load_dataframe_all(self):
-        all_listing_ids = self.listings.list_all_ids()
-        if not all_listing_ids:
-            return pd.DataFrame()
+        from src.data.database.models import ApartmentSaleListing, Location, Features
+        from sqlalchemy import select, join
 
-        rows = []
-        for listing_id in all_listing_ids:
-            listing = self.listings.get(int(listing_id))
-            if listing is None:
-                continue
+        with self.db.session() as session:
+            query = select(
+                ApartmentSaleListing,
+                Location,
+                Features
+            ).join(
+                Location, ApartmentSaleListing.location_id == Location.id, isouter=True
+            ).join(
+                Features, ApartmentSaleListing.id == Features.listing_id, isouter=True
+            ).where(Location.city == "katowice")
 
-            location_obj = None
-            if getattr(listing, "location_id", None) is not None:
-                try:
-                    location_obj = self.locations.get(int(listing.location_id))
-                except Exception:
-                    location_obj = self.locations.get(listing.location_id)
+            results = session.execute(query).all()
 
-            features_obj = self.features.get_by_listing(int(listing_id))
+            if not results:
+                return pd.DataFrame()
 
-            row = {
-                **self.object_to_dict(listing),
-                **self.object_to_dict(location_obj),
-                **self.object_to_dict(features_obj),
+            rows = []
+            for listing, location, features in results:
+                row = {
+                    **self.object_to_dict(listing),
+                    **self.object_to_dict(location),
+                    **self.object_to_dict(features),
                 }
-            rows.append(row)
+                rows.append(row)
 
-        df = pd.DataFrame(rows)
-
-        df = df[df["city"] == "katowice"]
-
-        return df
+            return pd.DataFrame(rows)
 
     def load_data_by_period(self, period="last_week"):
-        today = datetime.now()  
+        from src.data.database.models import ApartmentSaleListing, Location, Features
+        from sqlalchemy import select, join
+
+        today = datetime.now()
 
         if period == "last_3d":
             date = today - timedelta(days=3)
@@ -60,43 +61,38 @@ class DataService:
         else:
             raise ValueError(f"Not valid period: {period}")
 
-        listing_ids = self.listings.list_ids_by_period(date)
+        with self.db.session() as session:
+            query = select(
+                ApartmentSaleListing,
+                Location,
+                Features
+            ).join(
+                Location, ApartmentSaleListing.location_id == Location.id, isouter=True
+            ).join(
+                Features, ApartmentSaleListing.id == Features.listing_id, isouter=True
+            ).where(
+                (Location.city == "katowice") &
+                (ApartmentSaleListing.creation_date >= date)
+            ).order_by(
+                ApartmentSaleListing.creation_date.desc(),
+                ApartmentSaleListing.creation_time.desc()
+            )
 
-        if not listing_ids:
-            return pd.DataFrame()
+            results = session.execute(query).all()
 
-        rows = []
-        for listing_id in listing_ids:
-            listing = self.listings.get(int(listing_id))
-            if listing is None:
-                continue
+            if not results:
+                return pd.DataFrame()
 
-            location_obj = None
-            if getattr(listing, "location_id", None) is not None:
-                try:
-                    location_obj = self.locations.get(int(listing.location_id))
-                except Exception:
-                    location_obj = self.locations.get(listing.location_id)
-
-            features_obj = self.features.get_by_listing(int(listing_id))
-
-            row = {
-                **self.object_to_dict(listing),
-                **self.object_to_dict(location_obj),
-                **self.object_to_dict(features_obj),
+            rows = []
+            for listing, location, features in results:
+                row = {
+                    **self.object_to_dict(listing),
+                    **self.object_to_dict(location),
+                    **self.object_to_dict(features),
                 }
-            rows.append(row)
+                rows.append(row)
 
-        df = pd.DataFrame(rows)
-
-        df = df[df["city"] == "katowice"]
-        
-        df = df.sort_values(
-            by=["creation_date", "creation_time"],
-            ascending=[False, False]
-)
-
-        return df
+            return pd.DataFrame(rows)
     
 
 
