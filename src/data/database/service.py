@@ -1,6 +1,20 @@
-import pandas as pd
 from datetime import datetime, timedelta
-from src.data.database.repositories import LocationsRepository, ListingsRepository, FeaturesRepository
+
+import pandas as pd
+
+from src.data.database.repositories.listings import ListingsRepository
+from src.data.database.repositories.locations import LocationsRepository
+from src.data.database.repositories.features import FeaturesRepository
+
+
+_PERIOD_DAYS = {"last_3d": 3, "last_week": 7, "last_month": 30}
+
+
+def _to_dict(obj):
+    if obj is None:
+        return {}
+    return {k: v for k, v in vars(obj).items() if not k.startswith("_sa_")}
+
 
 class DataService:
     def __init__(self, db):
@@ -9,90 +23,20 @@ class DataService:
         self.locations = LocationsRepository(db)
         self.features = FeaturesRepository(db)
 
-    def object_to_dict(self, obj):
-        """ORM object -> dict"""
-        if obj is None:
-            return {}
-        return {k: v for k, v in vars(obj).items() if not k.startswith("_sa_")}
+    def load_dataframe(self, city: str = "katowice", since: datetime | None = None) -> pd.DataFrame:
+        rows = self.listings.list_joined(city, since)
+        if not rows:
+            return pd.DataFrame()
+        return pd.DataFrame(
+            {**_to_dict(listing), **_to_dict(location), **_to_dict(features)}
+            for listing, location, features in rows
+        )
 
-    def load_dataframe_all(self):
-        from src.data.database.models import ApartmentSaleListing, Location, Features
-        from sqlalchemy import select, join
+    def load_dataframe_all(self) -> pd.DataFrame:
+        return self.load_dataframe()
 
-        with self.db.session() as session:
-            query = select(
-                ApartmentSaleListing,
-                Location,
-                Features
-            ).join(
-                Location, ApartmentSaleListing.location_id == Location.id, isouter=True
-            ).join(
-                Features, ApartmentSaleListing.id == Features.listing_id, isouter=True
-            ).where(Location.city == "katowice")
-
-            results = session.execute(query).all()
-
-            if not results:
-                return pd.DataFrame()
-
-            rows = []
-            for listing, location, features in results:
-                row = {
-                    **self.object_to_dict(listing),
-                    **self.object_to_dict(location),
-                    **self.object_to_dict(features),
-                }
-                rows.append(row)
-
-            return pd.DataFrame(rows)
-
-    def load_data_by_period(self, period="last_week"):
-        from src.data.database.models import ApartmentSaleListing, Location, Features
-        from sqlalchemy import select, join
-
-        today = datetime.now()
-
-        if period == "last_3d":
-            date = today - timedelta(days=3)
-        elif period == "last_week":
-            date = today - timedelta(days=7)
-        elif period == "last_month":
-            date = today - timedelta(days=30)
-        else:
+    def load_data_by_period(self, period: str = "last_week") -> pd.DataFrame:
+        if period not in _PERIOD_DAYS:
             raise ValueError(f"Not valid period: {period}")
-
-        with self.db.session() as session:
-            query = select(
-                ApartmentSaleListing,
-                Location,
-                Features
-            ).join(
-                Location, ApartmentSaleListing.location_id == Location.id, isouter=True
-            ).join(
-                Features, ApartmentSaleListing.id == Features.listing_id, isouter=True
-            ).where(
-                (Location.city == "katowice") &
-                (ApartmentSaleListing.creation_date >= date)
-            ).order_by(
-                ApartmentSaleListing.creation_date.desc(),
-                ApartmentSaleListing.creation_time.desc()
-            )
-
-            results = session.execute(query).all()
-
-            if not results:
-                return pd.DataFrame()
-
-            rows = []
-            for listing, location, features in results:
-                row = {
-                    **self.object_to_dict(listing),
-                    **self.object_to_dict(location),
-                    **self.object_to_dict(features),
-                }
-                rows.append(row)
-
-            return pd.DataFrame(rows)
-    
-
-
+        since = datetime.now() - timedelta(days=_PERIOD_DAYS[period])
+        return self.load_dataframe(since=since)
