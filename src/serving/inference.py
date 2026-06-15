@@ -1,7 +1,14 @@
+from functools import lru_cache
+
 import src.data.preprocess as pre
 import yaml
 import pandas as pd
 import mlflow.xgboost as mlfxgb
+
+
+@lru_cache(maxsize=1)
+def _load_model(model_uri: str):
+    return mlfxgb.load_model(model_uri)
 
 _BIN_COLS = [
     "balcony", "separate_kitchen", "air_conditioning", "roller_shutters", "dishwasher",
@@ -31,11 +38,10 @@ def features_inference_pipeline(df_raw):
 
 def predict(df):
     X = features_inference_pipeline(df)
-    try: 
+    try:
         cfg = yaml.safe_load(open("configs/config.yaml"))
-        model_uri = cfg["inference"]["model_uri"] 
-
-        model = mlfxgb.load_model(model_uri)
+        model_uri = cfg["inference"]["model_uri"]
+        model = _load_model(model_uri)
     except Exception as e:
         raise RuntimeError(f"Couldn't load model from MLflow ({model_uri}): {e}")
 
@@ -64,6 +70,6 @@ def predict_calculator(form_df):
         df[c] = df[c].astype("category")
     df = df[features]
 
-    model = mlfxgb.load_model(model_uri)
+    model = _load_model(model_uri)
     return model.predict(df)
 
