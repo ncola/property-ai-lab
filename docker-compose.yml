@@ -17,26 +17,12 @@ services:
     environment:
       - MLFLOW_SERVER_ALLOWED_HOSTS=*
 
-  app-manual:
+  app:
     build: .
-    container_name: property-app-manual
-    command: streamlit run app/app_manual.py --server.port 8503 --server.headless true
+    container_name: property-app
+    command: streamlit run app/streamlit_app.py --server.port 8501 --server.headless true
     ports:
-      - "8503:8503"
-    env_file: .env
-    environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5002
-    volumes:
-      - ./mlartifacts:/app/mlartifacts
-    depends_on:
-      - mlflow
-
-  app-automatic:
-    build: .
-    container_name: property-app-automatic
-    command: streamlit run app/app_automatic.py --server.port 8504 --server.headless true
-    ports:
-      - "8504:8504"
+      - "8501:8501"
     env_file: .env
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow:5002

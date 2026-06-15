@@ -24,7 +24,7 @@ docker-build:
 	docker compose build
 
 docker-up:
-	@echo "Starting all services (mlflow + apps)..."
+	@echo "Starting all services (mlflow + app)..."
 	docker compose up -d
 
 docker-down:

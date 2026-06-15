@@ -1,10 +1,5 @@
 services:
-  app-manual:
-    volumes:
-      - ./app:/app/app
-      - ./src:/app/src
-
-  app-automatic:
+  app:
     volumes:
       - ./app:/app/app
       - ./src:/app/src
