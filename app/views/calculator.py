@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
-from src.utils.mlflow_utils import set_tracking
+
 from src.serving.inference import predict_calculator
+
 
 st.markdown("""
 <style>
@@ -13,15 +14,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-try:
-    set_tracking()
-except Exception as e:
-    st.error(f"Couldn't set mlflow tracking uri, check config: {e}")
-    st.stop()
-st.set_page_config(page_title="Property AI Lab 🏠", layout="centered")
-
 st.title("🏠 Property Price Predictor")
 st.markdown("Podaj cechy nieruchomości na sprzedaz w Katowicach, a model oszacuje jej wartość.")
+
 
 def fmt_pln(x: float) -> str:
     return f"{x:,.0f} PLN".replace(",", " ")

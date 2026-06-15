@@ -1,21 +1,20 @@
 import streamlit as st
 import pandas as pd
-from utils import fmt_money, cut_description, calculate_price, is_deal
+
+from app.utils import fmt_money, cut_description, is_deal
 from src.data.database.db_setup import Database
 from src.data.database.service import DataService
-from src.serving.inference import features_inference_pipeline, predict
-from src.utils.mlflow_utils import set_tracking
+from src.serving.inference import predict
 
 
-st.set_page_config(page_title="Property AI Lab 🏠", layout="wide")
 st.title("🏠 Property Price Predictor")
 st.markdown("Najświezsze oferty mieszkań na sprzedaz w Katowicach z otodom")
+
 
 @st.cache_data(show_spinner=True)
 def load_offers_by_period(period):
     db = Database()
     return DataService(db).load_data_by_period(period)
-
 
 
 st.markdown("""
@@ -42,12 +41,6 @@ div[data-testid="stButton"] {
 }
 </style>
 """, unsafe_allow_html=True)
-
-try:
-    set_tracking()
-except Exception as e:
-    st.error(f"Couldn't set mlflow tracking uri, check config: {e}")
-    st.stop()
 
 # choosing period
 st.markdown("### Ustawienia")
@@ -90,9 +83,7 @@ df_all["diff"] = round(diff*100, 2)
 df_all["is_deal"] = deals
 
 
-
 st.markdown("### Oferty")
-# view
 icons = {
     "creation_date": "🕓",
     "district": "📍",
@@ -166,8 +157,6 @@ for i, row in df_all.head(int(n_cards)).iterrows():
             with st.expander("Podgląd danych"):
                 st.dataframe(pd.DataFrame(row).T, use_container_width=True)
 
-
-
         with right:
             col_true, col_pred, col_deal = st.columns(3)
 
@@ -187,10 +176,10 @@ for i, row in df_all.head(int(n_cards)).iterrows():
 
             with col_deal:
                 st.markdown(f"##### Okazja")
-                deal = row.get("is_deal") 
+                deal = row.get("is_deal")
                 diff = row.get("diff")
                 st.metric("róznica", f"{diff}%")
-                color = "#6ECD71" if deal else "#F57A71"  
+                color = "#6ECD71" if deal else "#F57A71"
                 text = "tak" if deal else "nie"
 
                 st.markdown(
@@ -210,10 +199,3 @@ for i, row in df_all.head(int(n_cards)).iterrows():
                     """,
                     unsafe_allow_html=True,
                 )
-
-
-
-
-
-                    
-
