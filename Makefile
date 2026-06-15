@@ -1,7 +1,7 @@
 MLFLOW_URI := http://localhost:5002
 
 
-.PHONY: run-server app-automatic docker-build docker-up docker-down docker-logs
+.PHONY: run-server app xgb xgb-tune docker-build docker-up docker-down docker-logs
 
 run-server:
 	@echo "🚀 Starting MLflow tracking server on $(MLFLOW_URI)"
@@ -15,13 +15,9 @@ xgb-tune:
 	@echo "🔍 Running XGBoost hyperparameter tuning and 🏋️ training on best parameters ..."
 	python3 -m src.pipelines.train_xgboost --tune
 
-app-manual:
-	@echo "Starting Streamlit inference app (manual data input) on http://localhost:8503"
-	PYTHONPATH=$(PWD) streamlit run app/app_manual.py --server.port 8503 --server.headless true
-
-app-automatic:
-	@echo "Starting Streamlit inference app (automatic based on PostgreSQL) on http://localhost:8504"
-	PYTHONPATH=$(PWD) streamlit run app/app_automatic.py --server.port 8504 --server.headless true
+app:
+	@echo "Starting Streamlit multi-page app on http://localhost:8501"
+	streamlit run app/streamlit_app.py --server.port 8501 --server.headless true
 
 docker-build:
 	@echo "Building Docker images..."
