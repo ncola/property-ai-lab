@@ -42,15 +42,14 @@ def log_training_curves(model, metric_name: str = "rmsle", tag: str = "validatio
     if not res or tag not in res:
         return
 
-    for split_name, series in res.items():
-        if metric_name in series:
-            for i, val in enumerate(series[metric_name]):
-                mlflow.log_metric(f"{split_name}_{metric_name}", float(val), step=i)
-
     frames = {}
     for split_name, series in res.items():
         if metric_name in series:
-            frames[split_name] = pd.Series(series[metric_name], name=f"{split_name}_{metric_name}")
+            values = series[metric_name]
+            if values:
+                mlflow.log_metric(f"{split_name}_{metric_name}_best", float(min(values)))
+                mlflow.log_metric(f"{split_name}_{metric_name}_last", float(values[-1]))
+            frames[split_name] = pd.Series(values, name=f"{split_name}_{metric_name}")
     if frames:
         hist_df = pd.concat(frames.values(), axis=1)
         hist_df.index.name = "iteration"
