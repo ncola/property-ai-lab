@@ -1,28 +1,58 @@
 experiment:
-  name: "apartemnts_katowice_prices"
+  name: "apartments_katowice_price"
 
 data:
-  target_col: "price"          
-
-feature_selection:
-  include: ["market", "building_age", "area", "rooms_num", "building_floors_num", "floor_num", "building_material", "construction_status", "district", 'balcony', 'separate_kitchen', 'air_conditioning','roller_shutters', 'dishwasher', 'garage','anti_burglary_door', 'basement', 'entryphone','garden', 'internet', 'monitoring', 'terrace', 'alarm', 'lift', 'closed_area']
+  target_col: "log_price_per_m"
 
 xgboost:
-  max_depth: 8
+  n_estimators: 800
+  max_depth: 6
   learning_rate: 0.05
   subsample: 0.8
-  colsample_bytree: 0.9
-  n_estimators: 800
+  colsample_bytree: 0.8
+  reg_alpha: 0.0
   reg_lambda: 1.0
+  min_child_weight: 1.0
+  tree_method: "hist"
+  n_jobs: -1
 
 training:
   test_size: 0.2
-  random_state: 2
+  random_state: 42
   early_stopping_rounds: 50
-  eval_metric: rmsle
+  eval_metric: rmse
   tune_n_iter: 40
   cv_splits: 5
 
 inference:
-  model_uri: "models:/apartments_price_model/1"
-
+  model_uris:
+    primary: "models:/property_price_per_m2_primary@champion"
+    secondary: "models:/property_price_per_m2_secondary@champion"
+  feature_columns:
+    - "building_age"
+    - "rooms_num"
+    - "building_floors_num"
+    - "floor_num"
+    - "building_material"
+    - "construction_status"
+    - "district"
+    - "balcony"
+    - "separate_kitchen"
+    - "dishwasher"
+    - "garage"
+    - "anti_burglary_door"
+    - "basement"
+    - "entryphone"
+    - "garden"
+    - "monitoring"
+    - "terrace"
+    - "lift"
+    - "closed_area"
+    - "is_ground"
+    - "is_low"
+    - "is_10plus"
+    - "rooms_per_area"
+    - "building_type"
+    - "furniture"
+    - "usable_room"
+    - "advert_type"

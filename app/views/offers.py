@@ -1,7 +1,7 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
-from app.utils import fmt_money, cut_description, is_deal
+from app.utils import cut_description, fmt_money, is_deal
 from src.data.database.db_setup import Database
 from src.data.database.service import DataService
 from src.serving.inference import predict
@@ -130,7 +130,8 @@ for i, row in df_all.head(int(n_cards)).iterrows():
                 val = row.get(key, None)
 
                 if key == "creation_date" and pd.notna(val):
-                    val = f"{val}"
+                    time = row.get("creation_time")
+                    val = f"{val}\n{str(time)[:5]}" if pd.notna(time) and str(time).strip() else f"{val}"
                 elif key == "area" and pd.notna(val):
                     val = f"{val} m²"
                 elif key == "floor_num" and pd.notna(val):

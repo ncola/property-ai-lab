@@ -17,7 +17,7 @@ The Streamlit app has two pages:
 
 🧹 Feature engineering and preprocessing pipeline
 
-🧪 Model: XGBoost with optional hyperparameter tuning
+🧪 Model: price-per-m² XGBoost with optional hyperparameter tuning
 
 📓 MLflow experiments, params, metrics, artifacts, plots, and model logging
 
@@ -25,7 +25,7 @@ The Streamlit app has two pages:
 
 🐳 Docker setup for MLflow and the Streamlit app
 
-✅ Pytest coverage for preprocessing and feature preparation
+✅ Pytest coverage for preprocessing, feature engineering, training, and inference
 
 ## 📂 Project Structure
 
@@ -36,7 +36,7 @@ app/
     offers.py              # recent offers view
     calculator.py          # manual calculator view
 src/
-  data/                    # preprocessing, feature prep database access
+  data/                    # database access, preprocessing, price-per-m² features
   pipelines/               # training scripts
   serving/                 # inference pipeline
   utils/                   # metrics and MLflow helpers
@@ -79,16 +79,16 @@ Start MLflow locally:
 make run-server
 ```
 
-Train the XGBoost model:
+Train the price-per-m² XGBoost models:
 
 ```bash
-make xgb
+make train
 ```
 
 Run hyperparameter tuning before the final training run:
 
 ```bash
-make xgb-tune
+make train-tune
 ```
 
 Run the Streamlit app:
@@ -129,7 +129,7 @@ pytest
 
 The project expects apartment listings collected by the related [otodom-scraper](https://github.com/ncola/otodom_scraper) project and stored in Neon Postgres.
 
-Training data is loaded through `src.data.database.service.DataService`, using the database connection configured in `src/data/database/db_setup.py`.
+Training data is loaded through `src.data.database.service.DataService`, using the database connection configured in `src/data/database/db_setup.py`. The current training pipeline uses Katowice sale listings, fills missing `price_per_m` from `price / area`, removes invalid rows, trims `price_per_m` outliers per market at the 1st and 99th percentiles, and trains separate primary/secondary models.
 
 ---
 
