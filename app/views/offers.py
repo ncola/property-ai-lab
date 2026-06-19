@@ -72,6 +72,10 @@ if df_all.empty:
 n_cards = st.slider("Liczba ofert", min_value=1, max_value=len(df_all)-1, value=min(10, len(df_all)-1), step=1)
 df_all = df_all.head(int(n_cards))
 
+for col in ("area", "price", "price_per_m"):
+    if col in df_all.columns:
+        df_all[col] = pd.to_numeric(df_all[col], errors="coerce")
+
 # add model inference
 try:
     predicted = predict(df_all)
