@@ -72,15 +72,22 @@ if df_all.empty:
 n_cards = st.slider("Liczba ofert", min_value=1, max_value=len(df_all)-1, value=min(10, len(df_all)-1), step=1)
 df_all = df_all.head(int(n_cards))
 
-
 # add model inference
-predicted = predict(df_all)
+try:
+    predicted = predict(df_all)
+except Exception as e:
+    st.warning(f"Nie udało się policzyć predykcji: {e}")
+    predicted = pd.array([pd.NA] * len(df_all), dtype="Float64")
 
-df_all["predicted_price"] = predicted
-df_all["predicted_price_per_m2"] = (predicted / df_all["area"]).astype(int)
-diff, deals = is_deal(df_all)
-df_all["diff"] = round(diff*100, 2)
-df_all["is_deal"] = deals
+df_all["predicted_price"] = pd.array(predicted, dtype="Float64")
+df_all["predicted_price_per_m2"] = (df_all["predicted_price"] / df_all["area"]).astype("Float64")
+try:
+    diff, deals = is_deal(df_all)
+    df_all["diff"] = (diff * 100).round(2)
+    df_all["is_deal"] = deals
+except Exception:
+    df_all["diff"] = pd.NA
+    df_all["is_deal"] = pd.NA
 
 
 st.markdown("### Oferty")
@@ -179,9 +186,14 @@ for i, row in df_all.head(int(n_cards)).iterrows():
                 st.markdown(f"##### Okazja")
                 deal = row.get("is_deal")
                 diff = row.get("diff")
-                st.metric("róznica", f"{diff}%")
-                color = "#6ECD71" if deal else "#F57A71"
-                text = "tak" if deal else "nie"
+                diff_str = f"{diff}%" if pd.notna(diff) else "brak informacji"
+                st.metric("róznica", diff_str)
+                if pd.isna(deal):
+                    color = "#9AA0A6"
+                    text = "brak"
+                else:
+                    color = "#6ECD71" if deal else "#F57A71"
+                    text = "tak" if deal else "nie"
 
                 st.markdown(
                     f"""

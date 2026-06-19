@@ -59,15 +59,21 @@ def predict(df_raw):
 
     for market in markets.dropna().unique():
         if market not in model_uris:
-            raise ValueError(f"No model URI configured for market: {market}")
+            continue
         idx = markets == market
-        X = _build_model_input(df.loc[idx], feature_columns)
         model = _load_model(model_uris[market])
-        log_price_per_m2 = model.predict(X)
-        predicted_prices.loc[idx] = np.exp(log_price_per_m2) * areas.loc[idx].to_numpy()
+        df_market = df.loc[idx]
+        try:
+            X = _build_model_input(df_market, feature_columns)
+            log_price_per_m2 = model.predict(X)
+            predicted_prices.loc[idx] = np.exp(log_price_per_m2) * areas.loc[idx].to_numpy()
+        except Exception:
+            for row_idx in df_market.index:
+                try:
+                    X_row = _build_model_input(df_market.loc[[row_idx]], feature_columns)
+                    log_price_per_m2 = model.predict(X_row)
+                    predicted_prices.loc[row_idx] = float(np.exp(log_price_per_m2[0]) * areas.loc[row_idx])
+                except Exception:
+                    predicted_prices.loc[row_idx] = np.nan
 
-    if predicted_prices.isna().any():
-        missing = markets[predicted_prices.isna()].unique().tolist()
-        raise ValueError(f"Could not predict rows for markets: {missing}")
-
-    return predicted_prices.round().astype("int64").to_numpy()
+    return predicted_prices.round().to_numpy()
