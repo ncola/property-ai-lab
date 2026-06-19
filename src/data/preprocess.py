@@ -123,13 +123,21 @@ def create_building_age(df):
     return df
 
 
+def _decode_if_bytes(v):
+    if isinstance(v, (bytes, bytearray)):
+        return v.decode("utf-8")
+    if isinstance(v, memoryview):
+        return bytes(v).decode("utf-8")
+    return v
+
+
 def to_categorical(df):
     df_cat = df.copy()
     obj_cols = df_cat.select_dtypes(include=["object", "string"]).columns
 
     cat_cols = []
     for col in obj_cols:
-        df_cat[col] = df_cat[col].astype("category")
+        df_cat[col] = df_cat[col].map(_decode_if_bytes).astype("category")
         cat_cols.append(col)
 
     return df_cat, cat_cols
