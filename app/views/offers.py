@@ -73,7 +73,6 @@ if df_all.empty:
     st.warning("Brak danych w bazie.")
     st.stop()
 
-# run predictions on the full period (so filters like "okazja" work on everything)
 try:
     predicted = predict_cached(df_all)
 except Exception as e:
@@ -109,7 +108,7 @@ FEATURE_OPTIONS = {
 
 SORT_OPTIONS = {
     "Najnowsze": ("creation_date", False),
-    "Najlepsze okazje (%)": ("diff", False),
+    "Najlepsze potencjalne okazje (%)": ("diff", False),
     "Cena: rosnąco": ("price", True),
     "Cena: malejąco": ("price", False),
     "Cena za m²: rosnąco": ("price_per_m", True),
@@ -120,7 +119,7 @@ SORT_OPTIONS = {
 }
 
 
-def _range_slider(label, series, step=None, fmt=None):
+def _range_slider(label, series, step=None, fmt=None, key=None):
     s = pd.to_numeric(series, errors="coerce").dropna()
     if s.empty:
         return None
@@ -132,49 +131,72 @@ def _range_slider(label, series, step=None, fmt=None):
     kwargs = {"step": step} if step is not None else {}
     if fmt is not None:
         kwargs["format"] = fmt
+    if key is not None:
+        kwargs["key"] = key
     return st.slider(label, lo, hi, (lo, hi), **kwargs)
 
 
+FILTER_KEYS = [
+    "f_districts", "f_markets", "f_deal", "f_price", "f_ppm", "f_area",
+    "f_rooms", "f_year", "f_floors", "f_features", "f_desc", "f_sort",
+]
+
 with st.sidebar:
-    st.markdown("### 🔎 Filtry")
+    header_col, btn_col = st.columns([2, 1], vertical_alignment="center")
+    with header_col:
+        st.markdown("### 🔎 Filtry")
+    with btn_col:
+        if st.button("Wyczyść", width="stretch"):
+            for k in FILTER_KEYS:
+                st.session_state.pop(k, None)
+            st.rerun()
 
     districts = sorted(df_all["district"].dropna().astype(str).unique().tolist())
-    sel_districts = st.multiselect("Dzielnica", districts)
+    sel_districts = st.multiselect("Dzielnica", districts, key="f_districts")
 
     markets_present = [m for m in df_all["market"].dropna().unique().tolist() if m in MARKET_LABELS or True]
     sel_markets = st.multiselect(
         "Rynek",
         options=markets_present,
         format_func=lambda x: MARKET_LABELS.get(x, x),
+        key="f_markets",
     )
 
     deal_filter = st.radio(
-        "Okazje",
-        options=["wszystkie", "tylko okazje", "bez okazji"],
+        "Potencjalne okazje",
+        options=["wszystkie", "tylko potencjalne okazje", "bez potencjalnych okazji"],
         horizontal=True,
+        key="f_deal",
     )
 
-    sel_price = _range_slider("Cena (zł)", df_all["price"], step=10000)
-    sel_ppm = _range_slider("Cena za m² (zł)", df_all["price_per_m"], step=100)
-    sel_area = _range_slider("Powierzchnia (m²)", df_all["area"], step=1)
+    sel_price = _range_slider("Cena (zł)", df_all["price"], step=10000, key="f_price")
+    sel_ppm = _range_slider("Cena za m² (zł)", df_all["price_per_m"], step=100, key="f_ppm")
+    sel_area = _range_slider("Powierzchnia (m²)", df_all["area"], step=1, key="f_area")
 
     rooms_vals = sorted(pd.to_numeric(df_all["rooms_num"], errors="coerce").dropna().astype(int).unique().tolist())
-    sel_rooms = st.multiselect("Liczba pokoi", rooms_vals)
+    sel_rooms = st.multiselect("Liczba pokoi", rooms_vals, key="f_rooms")
 
-    sel_year = _range_slider("Rok budowy", df_all["building_build_year"], step=1)
+    sel_year = _range_slider("Rok budowy", df_all["building_build_year"], step=1, key="f_year")
 
     floor_vals = sorted(df_all["floor_num"].dropna().astype(str).unique().tolist())
-    sel_floors = st.multiselect("Piętro", floor_vals)
+    sel_floors = st.multiselect("Piętro", floor_vals, key="f_floors")
 
     available_features = [c for c in FEATURE_OPTIONS if c in df_all.columns]
     sel_features = st.multiselect(
         "Wymagane udogodnienia",
         options=available_features,
         format_func=lambda c: FEATURE_OPTIONS[c],
+        key="f_features",
+    )
+
+    sel_desc_query = st.text_input(
+        "Szukaj w opisie",
+        placeholder="np. osiedle Tuwima",
+        key="f_desc",
     )
 
     st.markdown("### ↕️ Sortowanie")
-    sort_key = st.selectbox("Sortuj według", list(SORT_OPTIONS.keys()))
+    sort_key = st.selectbox("Sortuj według", list(SORT_OPTIONS.keys()), key="f_sort")
 
 
 # =========================
@@ -201,9 +223,16 @@ if sel_floors:
 for feat in sel_features:
     df_view = df_view[df_view[feat] == True]
 
-if deal_filter == "tylko okazje":
+if sel_desc_query and sel_desc_query.strip():
+    df_view = df_view[
+        df_view["description_text"].fillna("").astype(str).str.contains(
+            sel_desc_query.strip(), case=False, regex=False
+        )
+    ]
+
+if deal_filter == "tylko potencjalne okazje":
     df_view = df_view[df_view["is_deal"]]
-elif deal_filter == "bez okazji":
+elif deal_filter == "bez potencjalnych okazji":
     df_view = df_view[~df_view["is_deal"]]
 
 # =========================
@@ -222,20 +251,23 @@ deals_found = int(df_view["is_deal"].sum()) if total_found else 0
 
 st.markdown(
     f"### Oferty — znaleziono **{total_found}** / {total_in_period} "
-    f"(w tym okazji: **{deals_found}**)"
+    f"(w tym potencjalnych okazji: **{deals_found}**)"
 )
 
 if total_found == 0:
     st.warning("Brak ofert spełniających wybrane filtry.")
     st.stop()
 
-n_cards = st.slider(
-    "Liczba ofert do pokazania",
-    min_value=1,
-    max_value=total_found,
-    value=min(10, total_found),
-    step=1,
-)
+if total_found == 1:
+    n_cards = 1
+else:
+    n_cards = st.slider(
+        "Liczba ofert do pokazania",
+        min_value=1,
+        max_value=total_found,
+        value=min(10, total_found),
+        step=1,
+    )
 df_view = df_view.head(int(n_cards))
 
 
@@ -275,13 +307,13 @@ for i, row in df_view.iterrows():
                 if len(description) > 400:
                     _, btn_col, _ = st.columns([1, 1, 1])
                     with btn_col:
-                        st.button("zwiń ▲", key=f"btn_{i}", use_container_width=True,
+                        st.button("zwiń ▲", key=f"btn_{i}", width="stretch",
                                   on_click=lambda k=desc_key: st.session_state.update({k: False}))
             else:
                 st.markdown(f"Opis:<br>{fmt_desc(cut_description(description, 400))}", unsafe_allow_html=True)
                 _, btn_col, _ = st.columns([1, 1, 1])
                 with btn_col:
-                    st.button("pokaż pełny opis ▼", key=f"btn_{i}", use_container_width=True,
+                    st.button("pokaż pełny opis ▼", key=f"btn_{i}", width="stretch",
                               on_click=lambda k=desc_key: st.session_state.update({k: True}))
             link = row.get("offer_link")
             st.markdown(f"🔗 [Link do oferty]({link})")
@@ -316,7 +348,7 @@ for i, row in df_view.iterrows():
                     unsafe_allow_html=True
                 )
             with st.expander("Podgląd danych"):
-                st.dataframe(pd.DataFrame(row).T, use_container_width=True)
+                st.dataframe(pd.DataFrame(row).T, width="stretch")
 
         with right:
             col_true, col_pred, col_deal = st.columns(3)
@@ -336,7 +368,7 @@ for i, row in df_view.iterrows():
                 st.metric("cena za m2", fmt_money(pred_ppm))
 
             with col_deal:
-                st.markdown(f"##### Okazja")
+                st.markdown(f"##### Potencjalna okazja")
                 deal = row.get("is_deal")
                 diff = row.get("diff")
                 st.metric("róznica", f"{diff}%")

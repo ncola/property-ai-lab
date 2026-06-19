@@ -8,8 +8,10 @@ The project loads apartment listings from a Neon Postgres database, prepares mod
 
 The Streamlit app has two pages:
 
-- **Oferty** - shows recent Otodom listings from the database, adds model predictions, compares predicted and listed prices, and marks potential bargains.
+- **Oferty** - shows recent Otodom listings from the database, adds model predictions, compares predicted and listed prices, and marks potential bargains. Sidebar filters (district, market, price, m², area, rooms, build year, floor, amenities, free-text search in description), sorting, and a one-click "clear filters" button.
 - **Kalkulator** - lets users enter custom apartment parameters and get an instant price estimate.
+
+![Property AI Lab — Streamlit app](app.png)
 
 ## ✨ Features
 
@@ -22,6 +24,8 @@ The Streamlit app has two pages:
 📓 MLflow experiments, params, metrics, artifacts, plots, and model logging
 
 🖥️ Streamlit inference UI: recent offers with bargain mark + manual price calculator
+
+🔎 Rich filtering, sorting, and description search on the offers view
 
 🐳 Docker setup for MLflow and the Streamlit app
 
