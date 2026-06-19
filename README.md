@@ -11,7 +11,14 @@ The Streamlit app has two pages:
 - **Oferty** - shows recent Otodom listings from the database, adds model predictions, compares predicted and listed prices, and marks potential bargains. Sidebar filters (district, market, price, m², area, rooms, build year, floor, amenities, free-text search in description), sorting, and a one-click "clear filters" button.
 - **Kalkulator** - lets users enter custom apartment parameters and get an instant price estimate.
 
-![Property AI Lab — Streamlit app](app.png)
+## 🖼️ Preview
+
+![Property AI Lab - Streamlit main page](imgs/app.png)
+
+### 🎬 Dashboard Preview
+<video src="imgs/app_dashboard.mp4" controls width="100%" title="Property AI Lab dashboard preview"></video>
+
+
 
 ## ✨ Features
 
