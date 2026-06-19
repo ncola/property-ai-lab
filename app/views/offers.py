@@ -323,7 +323,11 @@ for i, row in df_view.iterrows():
                 val = row.get(key, None)
 
                 if key == "creation_date" and pd.notna(val):
-                    val = f"{val}"
+                    creation_time = row.get("creation_time")
+                    if pd.notna(creation_time) and str(creation_time).strip() != "":
+                        val = f"{val}<br>{creation_time}"
+                    else:
+                        val = f"{val}"
                 elif key == "area" and pd.notna(val):
                     val = f"{val} m²"
                 elif key == "floor_num" and pd.notna(val):
