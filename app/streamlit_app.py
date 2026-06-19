@@ -50,6 +50,7 @@ except Exception as e:
 
 offers = st.Page("views/offers.py", title="Oferty", icon="🏠", default=True)
 calculator = st.Page("views/calculator.py", title="Kalkulator", icon="🧮")
+dashboard = st.Page("views/dashboard.py", title="Dashboard", icon="📊")
 
-pg = st.navigation([offers, calculator], position="top")
+pg = st.navigation([offers, calculator, dashboard], position="top")
 pg.run()
