@@ -1,7 +1,7 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 
-from app.utils import cut_description, fmt_money, is_deal
+from app.utils import fmt_money, cut_description, is_deal
 from src.data.database.db_setup import Database
 from src.data.database.service import DataService
 from src.serving.inference import predict
@@ -72,26 +72,15 @@ if df_all.empty:
 n_cards = st.slider("Liczba ofert", min_value=1, max_value=len(df_all)-1, value=min(10, len(df_all)-1), step=1)
 df_all = df_all.head(int(n_cards))
 
-for col in ("area", "price", "price_per_m"):
-    if col in df_all.columns:
-        df_all[col] = pd.to_numeric(df_all[col], errors="coerce")
 
 # add model inference
-try:
-    predicted = predict(df_all)
-except Exception as e:
-    st.warning(f"Nie udało się policzyć predykcji: {e}")
-    predicted = pd.array([pd.NA] * len(df_all), dtype="Float64")
+predicted = predict(df_all)
 
-df_all["predicted_price"] = pd.array(predicted, dtype="Float64")
-df_all["predicted_price_per_m2"] = (df_all["predicted_price"] / df_all["area"]).astype("Float64")
-try:
-    diff, deals = is_deal(df_all)
-    df_all["diff"] = (diff * 100).round(2)
-    df_all["is_deal"] = deals
-except Exception:
-    df_all["diff"] = pd.NA
-    df_all["is_deal"] = pd.NA
+df_all["predicted_price"] = predicted
+df_all["predicted_price_per_m2"] = (predicted / df_all["area"]).astype(int)
+diff, deals = is_deal(df_all)
+df_all["diff"] = round(diff*100, 2)
+df_all["is_deal"] = deals
 
 
 st.markdown("### Oferty")
@@ -141,8 +130,7 @@ for i, row in df_all.head(int(n_cards)).iterrows():
                 val = row.get(key, None)
 
                 if key == "creation_date" and pd.notna(val):
-                    time = row.get("creation_time")
-                    val = f"{val}\n{str(time)[:5]}" if pd.notna(time) and str(time).strip() else f"{val}"
+                    val = f"{val}"
                 elif key == "area" and pd.notna(val):
                     val = f"{val} m²"
                 elif key == "floor_num" and pd.notna(val):
@@ -190,14 +178,9 @@ for i, row in df_all.head(int(n_cards)).iterrows():
                 st.markdown(f"##### Okazja")
                 deal = row.get("is_deal")
                 diff = row.get("diff")
-                diff_str = f"{diff}%" if pd.notna(diff) else "brak informacji"
-                st.metric("róznica", diff_str)
-                if pd.isna(deal):
-                    color = "#9AA0A6"
-                    text = "brak"
-                else:
-                    color = "#6ECD71" if deal else "#F57A71"
-                    text = "tak" if deal else "nie"
+                st.metric("róznica", f"{diff}%")
+                color = "#6ECD71" if deal else "#F57A71"
+                text = "tak" if deal else "nie"
 
                 st.markdown(
                     f"""

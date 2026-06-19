@@ -1,19 +1,19 @@
 MLFLOW_URI := http://localhost:5002
 
 
-.PHONY: run-server app train train-tune docker-build docker-up docker-down docker-logs
+.PHONY: run-server app xgb xgb-tune docker-build docker-up docker-down docker-logs
 
 run-server:
 	@echo "🚀 Starting MLflow tracking server on $(MLFLOW_URI)"
 	mlflow server --host 0.0.0.0 --port 5002 --backend-store-uri sqlite:///mlflow.db  --default-artifact-root file:./mlartifacts
 
-train:
-	@echo "🏋️ Training price-per-m² XGBoost models..."
-	python3 -m src.pipelines.train_model
+xgb:
+	@echo "🏋️ Training XGBoost model..."
+	python3 -m src.pipelines.train_xgboost
 
-train-tune:
-	@echo "🔍 Running price-per-m² XGBoost hyperparameter tuning and 🏋️ training on best parameters ..."
-	python3 -m src.pipelines.train_model --tune
+xgb-tune:
+	@echo "🔍 Running XGBoost hyperparameter tuning and 🏋️ training on best parameters ..."
+	python3 -m src.pipelines.train_xgboost --tune
 
 app:
 	@echo "Starting Streamlit multi-page app on http://localhost:8501"

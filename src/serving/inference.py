@@ -1,79 +1,75 @@
 from functools import lru_cache
-from pathlib import Path
-
-import mlflow.xgboost as mlfxgb
-import numpy as np
-import pandas as pd
-import yaml
 
 import src.data.preprocess as pre
-import src.data.price_per_m2_features as price_features
-
-
-CONFIG_PATH = Path("configs/config.yaml")
+import yaml
+import pandas as pd
+import mlflow.xgboost as mlfxgb
 
 
 @lru_cache(maxsize=1)
-def _load_config():
-    with CONFIG_PATH.open() as f:
-        return yaml.safe_load(f)
-
-
-@lru_cache(maxsize=4)
 def _load_model(model_uri: str):
     return mlfxgb.load_model(model_uri)
 
+_BIN_COLS = [
+    "balcony", "separate_kitchen", "air_conditioning", "roller_shutters", "dishwasher",
+    "garage", "anti_burglary_door", "basement", "entryphone", "garden", "internet",
+    "monitoring", "terrace", "alarm", "lift", "closed_area",
+]
+_CAT_STR_COLS = ["market", "building_material", "construction_status", "district", "floor_num"]
+_INT_COLS = ["building_age"]
+_FLOAT_COLS = ["area", "rooms_num", "building_floors_num"]
 
-def _prepare_inference_frame(df_raw):
-    df = pre.clean_raw_data(df_raw.copy())
-    return price_features.add_price_per_m2_features(df)
 
+def features_inference_pipeline(df_raw):
+    cfg = yaml.safe_load(open("configs/config.yaml"))
+    f_cfg = cfg.get("feature_selection")
+    include = f_cfg.get("include") # columns from  model signature, in case
+    df = df_raw.copy()
 
-def _build_model_input(df, feature_columns):
-    X = df.copy()
-    for col in feature_columns:
-        if col not in X.columns:
-            X[col] = pd.NA
-    X = X[feature_columns].copy()
-    X, _ = pre.to_categorical(X)
+    df = pre.basic_transformations_depending_on_database(df)
+    df = pre.create_building_age(df)
+    
+    X = df[include]
+
+    X, _ = pre.to_categorical(X)  
     X, _ = pre.to_float64(X)
+
     return X
 
+def predict(df):
+    X = features_inference_pipeline(df)
+    try:
+        cfg = yaml.safe_load(open("configs/config.yaml"))
+        model_uri = cfg["inference"]["model_uri"]
+        model = _load_model(model_uri)
+    except Exception as e:
+        raise RuntimeError(f"Couldn't load model from MLflow ({model_uri}): {e}")
 
-def predict(df_raw):
-    inference_cfg = _load_config()["inference"]
-    df = _prepare_inference_frame(df_raw)
-    if "market" not in df.columns:
-        raise ValueError("Missing required column: market")
-    if "area" not in df.columns:
-        raise ValueError("Missing required column: area")
+    y_pred =  model.predict(X).astype(int)
 
-    areas = pd.to_numeric(df["area"], errors="coerce")
-    if areas.isna().any() or (areas <= 0).any():
-        raise ValueError("Area must be present and greater than 0.")
+    return y_pred
 
-    model_uris = inference_cfg["model_uris"]
-    feature_columns = inference_cfg["feature_columns"]
-    markets = df["market"]
-    predicted_prices = pd.Series(index=df.index, dtype="float64")
 
-    for market in markets.dropna().unique():
-        if market not in model_uris:
-            continue
-        idx = markets == market
-        model = _load_model(model_uris[market])
-        df_market = df.loc[idx]
-        try:
-            X = _build_model_input(df_market, feature_columns)
-            log_price_per_m2 = model.predict(X)
-            predicted_prices.loc[idx] = np.exp(log_price_per_m2) * areas.loc[idx].to_numpy()
-        except Exception:
-            for row_idx in df_market.index:
-                try:
-                    X_row = _build_model_input(df_market.loc[[row_idx]], feature_columns)
-                    log_price_per_m2 = model.predict(X_row)
-                    predicted_prices.loc[row_idx] = float(np.exp(log_price_per_m2[0]) * areas.loc[row_idx])
-                except Exception:
-                    predicted_prices.loc[row_idx] = np.nan
+def predict_calculator(form_df):
+    """Predict for a single-row DataFrame coming from the manual input form."""
+    cfg = yaml.safe_load(open("configs/config.yaml"))
+    features = cfg["feature_selection"]["include"]
+    model_uri = cfg["inference"]["model_uri"]
 
-    return predicted_prices.round().to_numpy()
+    df = form_df.copy()
+    df[_BIN_COLS] = (
+        df[_BIN_COLS]
+        .replace({"tak": 1, "nie": 0, True: 1, False: 0})
+        .astype("int64")
+    )
+    for c in _INT_COLS:
+        df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0).astype("int64")
+    for c in _FLOAT_COLS:
+        df[c] = pd.to_numeric(df[c], errors="coerce").astype("float64")
+    for c in _CAT_STR_COLS:
+        df[c] = df[c].astype("category")
+    df = df[features]
+
+    model = _load_model(model_uri)
+    return model.predict(df)
+

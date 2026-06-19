@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from src.serving.inference import predict
+from src.serving.inference import predict_calculator
 
 
 st.markdown("""
@@ -22,45 +22,10 @@ def fmt_pln(x: float) -> str:
     return f"{x:,.0f} PLN".replace(",", " ")
 
 
-MARKET_LABELS = {
-    "primary": "pierwotny",
-    "secondary": "wtórny",
-}
-ADVERT_TYPE_LABELS = {
-    "developer_unit": "deweloper",
-    "agency": "agencja",
-    "private": "prywatna",
-}
-BUILDING_MATERIAL_LABELS = {
-    "brick": "cegła",
-    "concrete_plate": "płyta",
-    "concrete": "beton",
-    "reinforced_concrete": "żelbet",
-    "other": "inne",
-}
-BUILDING_TYPE_LABELS = {
-    "block": "blok",
-    "apartment": "apartamentowiec",
-    "tenement": "kamienica",
-    "other": "inne",
-}
-CONSTRUCTION_STATUS_LABELS = {
-    "ready_to_use": "gotowy",
-    "to_completion": "w budowie",
-    "to_renovation": "do remontu",
-}
-YES_NO_LABELS = {False: "nie", True: "tak"}
-
-
-def yes_no(label):
-    return st.selectbox(label, [False, True], format_func=YES_NO_LABELS.get)
-
-
 st.subheader("Dane podstawowe")
 b1, b2 = st.columns(2)
 with b1:
-    market = st.selectbox("Rynek", list(MARKET_LABELS), format_func=MARKET_LABELS.get)
-    advert_type = st.selectbox("Typ ogłoszenia", list(ADVERT_TYPE_LABELS), format_func=ADVERT_TYPE_LABELS.get)
+    market = st.selectbox("Rynek", ["pierwotny", "wtórny"])
     area = st.number_input("Powierzchnia (m²)", min_value=10.0, max_value=1000.0, value=60.0, step=1.0)
 with b2:
     floor_options = ['1','2','0','3','4','10+','5','6','7','8','9','10']
@@ -71,19 +36,10 @@ st.subheader("Budynek")
 bu1, bu2 = st.columns(2)
 with bu1:
     building_floors_num = st.number_input("Liczba pięter w budynku", min_value=1, max_value=100, value=5, step=1)
-    building_material = st.selectbox(
-        "Materiał budynku",
-        list(BUILDING_MATERIAL_LABELS),
-        format_func=BUILDING_MATERIAL_LABELS.get,
-    )
-    building_type = st.selectbox("Typ budynku", list(BUILDING_TYPE_LABELS), format_func=BUILDING_TYPE_LABELS.get)
+    building_material = st.selectbox("Materiał budynku", ["cegła", "płyta", "beton", "inne"])
 with bu2:
     building_age = st.number_input("Wiek budynku (lata)", min_value=0, max_value=200, value=10, step=1)
-    construction_status = st.selectbox(
-        "Status budowy",
-        list(CONSTRUCTION_STATUS_LABELS),
-        format_func=CONSTRUCTION_STATUS_LABELS.get,
-    )
+    construction_status = st.selectbox("Status budowy", ["gotowy", "w budowie"])
 
 st.subheader("Lokalizacja")
 district = st.selectbox(
@@ -98,55 +54,57 @@ district = st.selectbox(
 st.subheader("Udogodnienia")
 u1, u2, u3, u4 = st.columns(4)
 with u1:
-    balcony = yes_no("Balkon")
-    terrace = yes_no("Taras")
-    garden = yes_no("Ogród")
-    garage = yes_no("Garaż")
+    balcony = st.selectbox("Balkon", ["nie", "tak"])
+    terrace = st.selectbox("Taras", ["nie", "tak"])
+    garden = st.selectbox("Ogród", ["nie", "tak"])
+    garage = st.selectbox("Garaż", ["nie", "tak"])
 with u2:
-    lift = yes_no("Winda")
-    separate_kitchen = yes_no("Oddzielna kuchnia")
-    dishwasher = yes_no("Zmywarka")
-    furniture = yes_no("Meble")
+    internet = st.selectbox("Internet", ["nie", "tak"])
+    lift = st.selectbox("Winda", ["nie", "tak"])
+    separate_kitchen = st.selectbox("Oddzielna kuchnia", ["nie", "tak"])
+    dishwasher = st.selectbox("Zmywarka", ["nie", "tak"])
 with u3:
-    anti_burglary_door = yes_no("Drzwi antywłamaniowe")
-    closed_area = yes_no("Osiedle zamknięte")
-    entryphone = yes_no("Domofon / wideofon")
-    monitoring = yes_no("Monitoring")
+    air_conditioning = st.selectbox("Klimatyzacja", ["nie", "tak"])
+    roller_shutters = st.selectbox("Rolety", ["nie", "tak"])
+    anti_burglary_door = st.selectbox("Drzwi antywłamaniowe", ["nie", "tak"])
+    closed_area = st.selectbox("Osiedle zamknięte", ["nie", "tak"])
 with u4:
-    basement = yes_no("Piwnica")
-    usable_room = yes_no("Pomieszczenie użytkowe")
+    entryphone = st.selectbox("Domofon / wideofon", ["nie", "tak"])
+    monitoring = st.selectbox("Monitoring", ["nie", "tak"])
+    alarm = st.selectbox("Alarm", ["nie", "tak"])
+    basement = st.selectbox("Piwnica", ["nie", "tak"])
 
 input_df = pd.DataFrame([{
     "market": market,
-    "advert_type": advert_type,
     "building_age": building_age,
     "area": area,
     "rooms_num": rooms_num,
     "building_floors_num": building_floors_num,
     "floor_num": floor_num,
     "building_material": building_material,
-    "building_type": building_type,
     "construction_status": construction_status,
     "district": district,
     "balcony": balcony,
     "separate_kitchen": separate_kitchen,
+    "air_conditioning": air_conditioning,
+    "roller_shutters": roller_shutters,
     "dishwasher": dishwasher,
     "garage": garage,
     "anti_burglary_door": anti_burglary_door,
     "basement": basement,
     "entryphone": entryphone,
     "garden": garden,
+    "internet": internet,
     "monitoring": monitoring,
     "terrace": terrace,
+    "alarm": alarm,
     "lift": lift,
     "closed_area": closed_area,
-    "furniture": furniture,
-    "usable_room": usable_room,
 }])
 
 st.markdown("---")
 if st.button("🔮 Przewiduj cenę"):
-    yhat = predict(input_df)
+    yhat = predict_calculator(input_df)
     total_price = float(yhat[0])
     price_per_m2 = total_price / float(area)
 
