@@ -1,4 +1,4 @@
-mlflow
+mlflow==3.13.0
 protobuf==3.20.3
 scikit-learn
 psycopg2-binary
@@ -8,4 +8,4 @@ numpy
 pyyaml
 python-dotenv
 streamlit
-xgboost
+xgboost==3.2.0
